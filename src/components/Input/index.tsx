@@ -1,9 +1,22 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react/prop-types */
 /* eslint-disable import/no-unresolved */
 /* eslint-disable no-use-before-define */
 import React from 'react';
+import { TextInputProps } from 'react-native';
 
-import { Container } from './styles';
+import { Container, TextInput, Icon } from './styles';
 
-const Input: React.FC = () => <Container />;
+interface InputProps extends TextInputProps {
+  name: string;
+  icon: string;
+}
 
+const Input: React.FC<InputProps> = ({ name, icon, ...rest }) => (
+  <Container>
+    <Icon name={icon} size={20} color="#666360" />
+
+    <TextInput keyboardAppearance="dark" placeholder="#666360" {...rest} />
+  </Container>
+);
 export default Input;

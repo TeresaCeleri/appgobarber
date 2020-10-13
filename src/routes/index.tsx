@@ -1,3 +1,5 @@
+/* eslint-disable prettier/prettier */
+/* eslint-disable spaced-comment */
 /* eslint-disable no-use-before-define */
 /* eslint-disable import/extensions */
 import React from 'react';
@@ -15,6 +17,8 @@ const AuthRoutes: React.FC = () => (
       headerShown: false,
       cardStyle: { backgroundColor: '#312e38' },
     }}
+    /*para aplicacao já começar pelo signup*/
+    initialRouteName='SignUp'
   >
     <Auth.Screen name="SignIn" component={SignIn} />
     <Auth.Screen name="SignUp" component={SignUp} />
