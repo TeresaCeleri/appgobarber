@@ -1,15 +1,32 @@
+/* eslint-disable no-unused-expressions */
 /* eslint-disable react/jsx-no-undef */
 /* eslint-disable no-console */
 /* eslint-disable prettier/prettier */
 /* eslint-disable @typescript-eslint/no-empty-function */
 /* eslint-disable import/extensions */
 // eslint-disable-next-line no-use-before-define
-import React from 'react';
-import { Image, View, ScrollView, KeyboardAvoidingView, Platform } from 'react-native';
+import React, { useRef, useCallback } from 'react';
+import {
+  Image,
+  View,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  TextInput,
+  Alert,
+} from 'react-native';
+
 import Icon from 'react-native-vector-icons/Feather';
+import { useNavigation } from '@react-navigation/native';
+import { Form } from '@unform/mobile';
+import { FormHandles } from '@unform/core';
+import * as Yup from 'yup';
+import api from '../../services/api';
 
 import Input from '../../components/Input';
 import Button from '../../components/Button';
+
+import getValidationErrors from '../../utils/getValidationErrors';
 
 import logoImg from '../../assets/logo.png';
 
@@ -20,7 +37,61 @@ import {
   BackToSignInText,
 } from './styles';
 
+interface SignUpFormData {
+  nome: string;
+  email: string;
+  password: string;
+}
+
 const SignUp: React.FC = () => {
+  const formRef = useRef<FormHandles>(null);
+  const navigation = useNavigation();
+
+  const emailInputref = useRef<TextInput>(null);
+  const passwordInputref = useRef<TextInput>(null);
+
+  const handleSignUp = useCallback(
+    async (data: SignUpFormData) => {
+      try {
+        formRef.current?.setErrors({});
+
+        const schema = Yup.object().shape({
+          name: Yup.string().required("Nome obrigatório"),
+          email: Yup.string()
+            .required("E-mail obrigatório")
+            .email("Digite um email válido"),
+          password: Yup.string().min(6, "No mínimo 6 digítos"),
+        });
+
+        await schema.validate(data, {
+          abortEarly: false,
+        });
+
+        await api.post("/users", data);
+
+        Alert.alert(
+          'Cadastro realizado com sucesso',
+          'Você já ode fazer login na aplicação',
+        );
+
+        navigation.goBack();
+
+      } catch (err) {
+        if (err instanceof Yup.ValidationError) {
+          const errors = getValidationErrors(err);
+
+          formRef.current?.setErrors(errors);
+
+          return;
+        }
+        // disparar um toast
+        Alert.alert(
+          "Erro no Cadastro",
+          "Ocorreu um erro ao fazer cadastro, verificar",
+        );
+      }
+    }, [navigation]);
+
   return (
     <>
       <KeyboardAvoidingView
@@ -39,24 +110,53 @@ const SignUp: React.FC = () => {
               <Title>Crie sua conta</Title>
             </View>
 
-            <Input name="name" icon="user" placeholder="Nome" />
+            <Form ref={formRef} onSubmit={handleSignUp}>
+              <Input
+                autoCapitalize='words'
+                name="name"
+                icon="user"
+                placeholder="Nome"
+                returnKeyType='next'
+                onSubmitEditing={() => {
+                  emailInputref.current?.focus();
+                }}
+              />
 
-            <Input name="email" icon="mail" placeholder="e-mail" />
+              <Input
+                ref={emailInputref}
+                keyboardType='email-address'
+                autoCorrect={false}
+                autoCapitalize='none'
+                name="email"
+                icon="mail"
+                placeholder="e-mail"
+                returnKeyType='next'
+                onSubmitEditing={() => {
+                  passwordInputref.current?.focus();
+                }}
+              />
 
-            <Input name="password" icon="lock" placeholder="Senha" />
+              <Input
+                ref={passwordInputref}
+                secureTextEntry
+                name="password"
+                icon="lock"
+                placeholder="Senha"
+                textContentType='newPassword'
+                returnKeyType='send'
+                onSubmitEditing={() => formRef.current?.submitForm()}
+              />
 
-            <Button
-              onPress={() => {
-                console.log('Deu');
-              }}
-            >
-              Entrar
-            </Button>
+              <Button
+                onPress={() => formRef.current?.submitForm()}>
+                Cadastrar
+              </Button>
+            </Form>
           </Container>
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <BackToSignIn onPress={() => { }}>
+      <BackToSignIn onPress={() => navigation.goBack()}>
         <Icon name="arrow-left" size={20} color="#fff" />
         <BackToSignInText>Voltar para Logon</BackToSignInText>
       </BackToSignIn>
