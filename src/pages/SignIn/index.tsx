@@ -88,7 +88,7 @@ const SignIn: React.FC = () => {
         "Ocorreu um erro no login, verificar",
       );
     }
-  }, []);
+  }, [signIn]);
 
   return (
     <>
